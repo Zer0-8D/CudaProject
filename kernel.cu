@@ -36,10 +36,17 @@ int main()
 }
 
 // Helper function for grayscale CUDA function
-cudaError_t grayScale(const uchar4* const rbg_img, unsigned char *const grsc_img)
+cudaError_t grayScale(std::string inFile, std::string outFile)
 {
-   
+	uchar4 *d_rbg_img, *h_rbg_img;
+	unsigned char *d_grsc_img, *h_grsc_img;
+	const dim3 blockSize = (512, 1, 1);
+	int *blocks;
+
     cudaError_t cudaStatus;
+
+	// This function should output a uchar4* from the input picture as well as set the block number from the pixel number
+	//h_rbg_img = processImage(std::string inFile, blocks, blocksize);
 
     // Choose which GPU to run on, change this on a multi-GPU system.
     cudaStatus = cudaSetDevice(0);
@@ -48,45 +55,33 @@ cudaError_t grayScale(const uchar4* const rbg_img, unsigned char *const grsc_img
         goto Error;
     }
 
-    // Allocate GPU buffers for three vectors (two input, one output)    .
-    //cudaStatus = cudaMalloc((void**)&dev_c, size * sizeof(int));
+    // Allocate buffers for rbg and grsc images in device
+    cudaStatus = cudaMalloc((void**)&d_rbg_img, sizeof(uchar4));
     if (cudaStatus != cudaSuccess) {
         fprintf(stderr, "cudaMalloc failed!");
         goto Error;
     }
 
-    //cudaStatus = cudaMalloc((void**)&dev_a, size * sizeof(int));
+    cudaStatus = cudaMalloc((void**)&d_grsc_img, sizeof(unsigned char));
     if (cudaStatus != cudaSuccess) {
         fprintf(stderr, "cudaMalloc failed!");
         goto Error;
     }
 
-    //cudaStatus = cudaMalloc((void**)&dev_b, size * sizeof(int));
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "cudaMalloc failed!");
-        goto Error;
-    }
-
-    
-    //cudaStatus = cudaMemcpy(dev_a, a, size * sizeof(int), cudaMemcpyHostToDevice);
+    cudaStatus = cudaMemcpy(d_rbg_img, h_rbg_img, sizeof(uchar4), cudaMemcpyHostToDevice);
     if (cudaStatus != cudaSuccess) {
         fprintf(stderr, "cudaMemcpy failed!");
         goto Error;
     }
 
-    //cudaStatus = cudaMemcpy(dev_b, b, size * sizeof(int), cudaMemcpyHostToDevice);
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "cudaMemcpy failed!");
-        goto Error;
-    }
-
-    // Launch a kernel on the GPU with one thread for each element.
-    
+	const dim3 gridSize(*blocks, 1, 1);
+    // Launch a kernel on the GPU with one thread for each pixel
+	grayscaleKernel<<<blockSize, blockSize>>>(d_rbg_img, d_grsc_img);
 
     // Check for any errors launching the kernel
     cudaStatus = cudaGetLastError();
     if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "addKernel launch failed: %s\n", cudaGetErrorString(cudaStatus));
+        fprintf(stderr, "grayscaleKernel launch failed: %s\n", cudaGetErrorString(cudaStatus));
         goto Error;
     }
     
@@ -99,16 +94,15 @@ cudaError_t grayScale(const uchar4* const rbg_img, unsigned char *const grsc_img
     }
 
     
-    //cudaStatus = cudaMemcpy(c, dev_c, size * sizeof(int), cudaMemcpyDeviceToHost);
+	cudaStatus = cudaMemcpy(h_grsc_img, d_grsc_img, sizeof(unsigned char), cudaMemcpyDeviceToHost);
     if (cudaStatus != cudaSuccess) {
         fprintf(stderr, "cudaMemcpy failed!");
         goto Error;
     }
 
 Error:
-    //cudaFree(dev_c);
-    //cudaFree(dev_a);
-    //cudaFree(dev_b);
+    cudaFree(d_rbg_img);
+    cudaFree(d_grsc_img);
     
     return cudaStatus;
 }
