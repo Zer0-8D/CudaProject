@@ -11,7 +11,7 @@ void RGB2GSCALE_CPU( const uchar4* const rbg_img, unsigned char *const grsc_img,
 
 	size_t row, col;
 	const uchar4 colo;	//color can be represented using unsigned 4
-	const float chanSum
+	const float chanSum;
 	//brute force for loop iterating over all pixels in image and performing 		calculation
 	for(row = 0; row<rowCount; ++row){
 		for(col < colCount; ++col){
