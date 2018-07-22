@@ -11,3 +11,6 @@ https://code.msdn.microsoft.com/windowsdesktop/RGBA-to-Gray-image-e07dd9f5
 
 OpenCV:
 https://docs.opencv.org/2.4/doc/tutorials/introduction/linux_eclipse/linux_eclipse.html#linux-eclipse-usage
+
+Another Image input approach:
+// https://github.com/drpaneas/cuda/blob/master/main.cpp
